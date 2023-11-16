@@ -458,10 +458,10 @@ export class Sketch {
       return
     }
     if (this.clicked) {
-      let t = 0.008
+      let t = 0.01
       this.position = this.ease(this.position, this.targetPos, t)
     } else if (this.timerActive) {
-      let t = 0.008
+      let t = 0.01
       this.position = this.ease(this.position, this.targetPos, t)
     } else {
       this.speed = this.scrollAnimator.getSpeed()
