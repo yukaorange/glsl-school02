@@ -24,15 +24,13 @@ export class Sketch {
     this.container = options.dom
     this.renderTarget = null
 
-    this.width = this.container.offsetWidth
-    this.height = this.container.offsetHeight
+    this.width = this.container.offsetWidth * window.devicePixelRatio
+    this.height = this.container.offsetHeight * window.devicePixelRatio
 
     this.Xaspect = this.width / this.height
     this.Yaspect = this.height / this.width
-    this.resolution = new THREE.Vector2(
-      window.innerWidth * window.devicePixelRatio,
-      window.innerHeight * window.devicePixelRatio,
-    )
+
+    this.resolution = new THREE.Vector2(this.width, this.height)
 
     this.renderer = new THREE.WebGLRenderer()
     this.renderer.setPixelRatio(window.devicePixelRatio)
@@ -167,15 +165,12 @@ export class Sketch {
    * Update Sketch dimensions and aspect ratios on window resize.
    */
   resize() {
-    this.width = this.container.offsetWidth
-    this.height = this.container.offsetHeight
+    this.width = this.container.offsetWidth * window.devicePixelRatio
+    this.height = this.container.offsetHeight * window.devicePixelRatio
 
     this.Xaspect = this.width / this.height
     this.Yaspect = this.height / this.width
-    this.resolution = new THREE.Vector2(
-      window.innerWidth * window.devicePixelRatio,
-      window.innerHeight * window.devicePixelRatio,
-    )
+    this.resolution = new THREE.Vector2(this.width, this.height)
 
     this.imageXAspect = this.textures[0].source.data.width / this.textures[0].source.data.height
     this.imageYAspect = this.textures[0].source.data.height / this.textures[0].source.data.width
@@ -196,7 +191,7 @@ export class Sketch {
       this.circle.scale.set(1, 1)
     }
 
-    this.renderer.setSize(this.width, this.height)
+    this.renderer.setSize(this.width * window.devicePixelRatio, this.height * window.devicePixelRatio)
 
     this.camera.updateProjectionMatrix()
   }
