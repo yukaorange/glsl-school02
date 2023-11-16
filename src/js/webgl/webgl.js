@@ -75,7 +75,7 @@ export class Sketch {
       this.addCamera()
       // this.addControls()
       this.setupIndicator()
-      this.addSettings()
+      // this.addSettings()
       this.ScrollAnimatorInit()
       this.timerInit()
       this.clickEventInit()
@@ -378,7 +378,7 @@ export class Sketch {
     this.updateTimer = setInterval(() => {
       this.targetPos = this.position + 1
       this.targetPos = Math.round(this.targetPos)
-    }, 8000)
+    }, 5000)
     window.addEventListener('wheel', () => {
       this.timerActive = false
       this.resetTimer()
@@ -428,7 +428,7 @@ export class Sketch {
     this.updateTimer = setInterval(() => {
       this.timerActive = true
       this.targetPos = this.position + 1
-    }, 8000)
+    }, 5000)
   }
 
   setupIndicator() {
@@ -437,6 +437,13 @@ export class Sketch {
     this.indicator.innerHTML = `${Math.abs(Math.floor(this.position) % this.textures.length) + 1}/${
       this.textures.length
     }`
+  }
+
+  updateInducator(current) {
+    if (this.current !== current) {
+      this.current = current
+      this.indicator.innerHTML = `${current + 1}/${this.textures.length}`
+    }
   }
 
   ease(start, end, t) {
@@ -483,7 +490,7 @@ export class Sketch {
     this.circleMaterial.uniforms.uTexture0.value = this.textures[current]
     this.circleMaterial.uniforms.uTexture1.value = this.textures[next]
 
-    this.indicator.innerHTML = `${current + 1}/${this.textures.length}`
+    this.updateInducator(current)
 
     const timeDelta = this.clock.getDelta() * this.timeScale
     this.time += timeDelta
