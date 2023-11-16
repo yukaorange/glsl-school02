@@ -24,8 +24,10 @@ export class Sketch {
     this.container = options.dom
     this.renderTarget = null
 
-    this.width = this.container.offsetWidth * window.devicePixelRatio
-    this.height = this.container.offsetHeight * window.devicePixelRatio
+    this.devicePixelRatio = window.devicePixelRatio || 1
+
+    this.width = this.container.offsetWidth * this.devicePixelRatio
+    this.height = this.container.offsetHeight * this.devicePixelRatio
 
     this.Xaspect = this.width / this.height
     this.Yaspect = this.height / this.width
@@ -33,7 +35,7 @@ export class Sketch {
     this.resolution = new THREE.Vector2(this.width, this.height)
 
     this.renderer = new THREE.WebGLRenderer()
-    this.renderer.setPixelRatio(window.devicePixelRatio)
+    this.renderer.setPixelRatio(this.devicePixelRatio)
     this.renderer.setSize(this.width, this.height)
     this.renderer.setClearColor(0x000000, 1)
 
@@ -165,8 +167,8 @@ export class Sketch {
    * Update Sketch dimensions and aspect ratios on window resize.
    */
   resize() {
-    this.width = this.container.offsetWidth * window.devicePixelRatio
-    this.height = this.container.offsetHeight * window.devicePixelRatio
+    this.width = this.container.offsetWidth * this.devicePixelRatio
+    this.height = this.container.offsetHeight * this.devicePixelRatio
 
     this.Xaspect = this.width / this.height
     this.Yaspect = this.height / this.width
@@ -191,7 +193,7 @@ export class Sketch {
       this.circle.scale.set(1, 1)
     }
 
-    this.renderer.setSize(this.width * window.devicePixelRatio, this.height * window.devicePixelRatio)
+    this.renderer.setSize(this.width * this.devicePixelRatio, this.height * this.devicePixelRatio)
 
     this.camera.updateProjectionMatrix()
   }
@@ -389,8 +391,7 @@ export class Sketch {
     next.addEventListener('click', () => {
       if (this.clicked === false) {
         this.clicked = true
-        this.targetPos += 1
-        this.targetPos = Math.round(this.targetPos)
+        this.targetPos = Math.round(this.targetPos) + 1
         this.timerActive = false
         this.resetTimer()
         setTimeout(() => {
@@ -404,8 +405,8 @@ export class Sketch {
     prev.addEventListener('click', () => {
       if (this.clicked === false) {
         this.clicked = true
-        this.targetPos -= 1
-        this.targetPos = Math.round(this.targetPos)
+        this.targetPos = Math.round(this.targetPos) - 1
+
         this.timerActive = false
         this.resetTimer()
         setTimeout(() => {
