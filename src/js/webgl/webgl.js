@@ -1,27 +1,38 @@
 import { gsap } from 'gsap'
-// import { ScrollTrigger } from "gsap/ScrollTrigger";
 import * as THREE from 'three'
 import { TextureLoader } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+
 import { Pane } from 'tweakpane'
+import fragmentShaderCircle from './shader/fragment-circle.glsl'
+import fragmentShaderPost from './shader/fragment-post.glsl'
 import fragmentShader from './shader/fragment.glsl'
+import vertexShaderCircle from './shader/vertex-circle.glsl'
+import vertexShaderPost from './shader/vertex-post.glsl'
 import vertexShader from './shader/vertex.glsl'
+import { ScrollAnimator } from '@/js/utils/ScrollAnimator'
 
 export function init() {
-  const sketch = new Sketch({
+  new Sketch({
     dom: document.getElementById('webgl-canvas'),
   })
 }
 export class Sketch {
   constructor(options) {
     this.scene = new THREE.Scene()
+    this.offscreenScene = new THREE.Scene()
     this.container = options.dom
+    this.renderTarget = null
 
     this.width = this.container.offsetWidth
     this.height = this.container.offsetHeight
 
     this.Xaspect = this.width / this.height
     this.Yaspect = this.height / this.width
+    this.resolution = new THREE.Vector2(
+      window.innerWidth * window.devicePixelRatio,
+      window.innerHeight * window.devicePixelRatio,
+    )
 
     this.renderer = new THREE.WebGLRenderer()
     this.renderer.setPixelRatio(window.devicePixelRatio)
@@ -30,6 +41,14 @@ export class Sketch {
 
     this.container.appendChild(this.renderer.domElement)
 
+    this.speed = 0
+    this.position = 0
+    this.targetPos = 0
+    this.updateTimer = null
+    this.timerActive = false
+    this.clicked = false
+    this.measure = document.querySelector('.dot')
+
     this.clock = new THREE.Clock()
     this.time = 0
     this.timeDelta = 0
@@ -37,15 +56,30 @@ export class Sketch {
 
     this.isPlaying = true
 
-    this.texUrl = ['/textures/square.jpg', '/textures/noise.png', '/textures/metal.webp']
+    this.texUrl = [
+      '/cyber/cyber01.jpg',
+      '/cyber/cyber02.jpg',
+      '/cyber/cyber03.jpg',
+      '/cyber/cyber04.jpg',
+      '/cyber/cyber05.jpg',
+      '/cyber/cyber06.jpg',
+    ]
     this.textures = []
+    this.noiseUrl = ['/textures/metal.webp', '/textures/water.jpg', '/textures/water-texture.jpg']
+    this.noises = []
 
     this.initiate(() => {
       this.setupResize()
+      this.setupRendererTarget()
       this.addObjects()
       this.addCamera()
-      this.addControls()
+      // this.addControls()
+      this.setupIndicator()
       this.addSettings()
+      this.ScrollAnimatorInit()
+      this.timerInit()
+      this.clickEventInit()
+      this.clickBackEventInit()
       this.resize()
       this.play()
       this.render()
@@ -57,17 +91,28 @@ export class Sketch {
    * @param {Function} cb - Callback function to execute after loading textures.
    */
   initiate(cb) {
-    const promises = this.texUrl.map((url, i) => {
+    const promises0 = this.texUrl.map((url, i) => {
       return new Promise((resolve) => {
-        // loadの第二引数は読み込み完了時に実行されるコールバック関数
         this.textures[i] = new THREE.TextureLoader().load(url, resolve)
       })
     })
+
+    const promises1 = this.noiseUrl.map((url, i) => {
+      return new Promise((resolve) => {
+        this.noises[i] = new THREE.TextureLoader().load(url, resolve)
+      })
+    })
+
+    const promises = [...promises0, ...promises1]
 
     // texturesを全て読み込んだら実行される
     Promise.all(promises).then(() => {
       cb()
     })
+  }
+
+  setupRendererTarget() {
+    this.renderTarget = new THREE.WebGLRenderTarget(this.width, this.height)
   }
 
   /**
@@ -83,13 +128,10 @@ export class Sketch {
       this.stop()
     })
 
-    this.pane.addButton({ title: 'resetTime' }).on('click', () => {
-      this.resetTime()
+    this.pane.addButton({ title: 'resetTimer' }).on('click', () => {
+      this.resetTimer()
       this.pane.refresh()
     })
-
-    this.pane.addBinding(this, 'timeScale', { title: 'timeScale', min: 0.01, max: 10 })
-
 
     window.addEventListener('keydown', (e) => {
       if (e.key.toLowerCase() === 'd') {
@@ -130,6 +172,10 @@ export class Sketch {
 
     this.Xaspect = this.width / this.height
     this.Yaspect = this.height / this.width
+    this.resolution = new THREE.Vector2(
+      window.innerWidth * window.devicePixelRatio,
+      window.innerHeight * window.devicePixelRatio,
+    )
 
     this.imageXAspect = this.textures[0].source.data.width / this.textures[0].source.data.height
     this.imageYAspect = this.textures[0].source.data.height / this.textures[0].source.data.width
@@ -137,11 +183,18 @@ export class Sketch {
     this.material.uniforms.uXaspect.value = this.Xaspect / this.imageXAspect
     this.material.uniforms.uYaspect.value = this.Yaspect / this.imageYAspect
 
-    // this.camera.aspect = this.width / this.height
+    this.camera.aspect = this.width / this.height
     // this.camera.fov = 2 * (180 / Math.PI) * Math.atan(this.height / (2 * this.dist))
 
-    // this.plane.scale.x = this.width
-    // this.plane.scale.y = this.height
+    this.plane.scale.x = this.Xaspect
+
+    if (window.innerWidth <= 400) {
+      this.circle.scale.set(0.6, 0.6)
+    } else if (window.innerWidth <= 780) {
+      this.circle.scale.set(0.75, 0.75)
+    } else {
+      this.circle.scale.set(1, 1)
+    }
 
     this.renderer.setSize(this.width, this.height)
 
@@ -151,14 +204,12 @@ export class Sketch {
    * Add the camera to the scene.
    */
   addCamera() {
-    // const fov = 60
-    // const fovRad = (fov / 2) * (Math.PI / 180)
-    // this.dist = this.height / 2 / Math.tan(fovRad)
-    // this.camera = new THREE.PerspectiveCamera(fov, this.width / this.height, 0.001, 1000)
+    const fov = 60
+    const fovRad = (fov / 2) * (Math.PI / 180)
+    this.dist = 1 / 2 / Math.tan(fovRad)
+    this.camera = new THREE.PerspectiveCamera(fov, this.width / this.height, 0.001, 1000)
 
-    this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.001, 1000)
-
-    this.camera.position.set(0, 0, 2)
+    this.camera.position.set(0, 0, this.dist)
   }
 
   /**controls
@@ -191,24 +242,116 @@ export class Sketch {
         uYaspect: {
           value: this.Yaspect / this.imageYAspect,
         },
-        progress: {
+        uResolution: {
+          value: this.resolution,
+        },
+        uProgress: {
           value: 0,
         },
-        uTexture: {
+        uTexture0: {
           value: this.textures[0],
         },
-        mouse: {
-          value: new THREE.Vector2(0, 0),
+        uTexture1: {
+          value: this.textures[1],
+        },
+        uNoise: {
+          value: this.noises[2],
         },
       },
       vertexShader: vertexShader,
       fragmentShader: fragmentShader,
     })
 
+    this.postMaterial = new THREE.RawShaderMaterial({
+      extensions: {
+        derivatives: '#extension GL_OES_standard_derivatives:',
+      },
+      side: THREE.DoubleSide,
+      uniforms: {
+        uTime: {
+          value: 0,
+        },
+        uXaspect: {
+          value: this.Xaspect / this.imageXAspect,
+        },
+        uYaspect: {
+          value: this.Yaspect / this.imageYAspect,
+        },
+        uResolution: {
+          value: this.resolution,
+        },
+        uProgress: {
+          value: 0,
+        },
+        uTexture0: {
+          value: null,
+        },
+        uTexture1: {
+          value: null,
+        },
+        uNoise: {
+          value: this.noises[0],
+        },
+      },
+      vertexShader: vertexShaderPost,
+      fragmentShader: fragmentShaderPost,
+    })
+
+    this.circleMaterial = new THREE.RawShaderMaterial({
+      extensions: {
+        derivatives: '#extension GL_OES_standard_derivatives:',
+      },
+      side: THREE.DoubleSide,
+      uniforms: {
+        uTime: {
+          value: 0,
+        },
+        uXaspect: {
+          value: this.Xaspect / this.imageXAspect,
+        },
+        uYaspect: {
+          value: this.Yaspect / this.imageYAspect,
+        },
+        uProgress: {
+          value: 0,
+        },
+        uTexture0: {
+          value: this.textures[0],
+        },
+        uTexture1: {
+          value: this.textures[1],
+        },
+        uResolution: {
+          value: this.resolution,
+        },
+        uNoise: {
+          value: this.noises[1],
+        },
+      },
+      vertexShader: vertexShaderCircle,
+      fragmentShader: fragmentShaderCircle,
+    })
+
     this.geometry = new THREE.PlaneGeometry(1, 1, 1, 1)
+    this.postGeometry = new THREE.PlaneGeometry(2, 2, 1, 1)
+
+    // this.circleGeometry = new THREE.RingGeometry(0.2, 0.5, 100, 100, 0, Math.PI * 2)
+    this.circleGeometry = new THREE.PlaneGeometry(1, 1, 100, 100)
 
     this.plane = new THREE.Mesh(this.geometry, this.material)
-    this.scene.add(this.plane)
+    this.plane.scale.x = this.Xaspect
+
+    this.circle = new THREE.Mesh(this.circleGeometry, this.circleMaterial)
+    this.circle.scale.x = 2 / 3
+    this.circle.scale.y = 2 / 3
+    this.circle.position.z = 0.1
+
+    this.postPlane = new THREE.Mesh(this.postGeometry, this.postMaterial)
+
+    this.offscreenScene.add(this.plane)
+    this.offscreenScene.add(this.circle)
+
+    this.scene.add(this.postPlane)
   }
   /**
    * Stop the rendering loop.
@@ -225,6 +368,81 @@ export class Sketch {
       this.render()
     }
   }
+
+  ScrollAnimatorInit() {
+    this.scrollAnimator = new ScrollAnimator()
+  }
+
+  timerInit() {
+    this.timerActive = true
+    this.updateTimer = setInterval(() => {
+      this.targetPos = this.position + 1
+      this.targetPos = Math.round(this.targetPos)
+    }, 8000)
+    window.addEventListener('wheel', () => {
+      this.timerActive = false
+      this.resetTimer()
+    })
+    window.addEventListener('touchmove', () => {
+      this.timerActive = false
+      this.resetTimer()
+    })
+  }
+
+  clickEventInit() {
+    const next = document.querySelector('.next')
+    next.addEventListener('click', () => {
+      if (this.clicked === false) {
+        this.clicked = true
+        this.targetPos += 1
+        this.targetPos = Math.round(this.targetPos)
+        this.timerActive = false
+        this.resetTimer()
+        setTimeout(() => {
+          this.clicked = false
+        }, 1000)
+      }
+    })
+  }
+  clickBackEventInit() {
+    const prev = document.querySelector('.prev')
+    prev.addEventListener('click', () => {
+      if (this.clicked === false) {
+        this.clicked = true
+        this.targetPos -= 1
+        this.targetPos = Math.round(this.targetPos)
+        this.timerActive = false
+        this.resetTimer()
+        setTimeout(() => {
+          this.clicked = false
+        }, 1000)
+      }
+    })
+  }
+
+  resetTimer() {
+    if (this.updateTimer) {
+      clearInterval(this.updateTimer)
+    }
+
+    this.updateTimer = setInterval(() => {
+      this.timerActive = true
+      this.targetPos = this.position + 1
+    }, 8000)
+  }
+
+  setupIndicator() {
+    this.indicator = document.querySelector('.indicator')
+
+    this.indicator.innerHTML = `${Math.abs(Math.floor(this.position) % this.textures.length) + 1}/${
+      this.textures.length
+    }`
+  }
+
+  ease(start, end, t) {
+    return start + (end - start) * t
+  }
+
   /**
    * Render the scene.
    */
@@ -232,13 +450,51 @@ export class Sketch {
     if (!this.isPlaying) {
       return
     }
+    if (this.clicked) {
+      let t = 0.008
+      this.position = this.ease(this.position, this.targetPos, t)
+    } else if (this.timerActive) {
+      let t = 0.008
+      this.position = this.ease(this.position, this.targetPos, t)
+    } else {
+      this.speed = this.scrollAnimator.getSpeed()
+      this.position += this.speed
+
+      let i = Math.round(this.position)
+      let dif = i - this.position
+
+      this.position += Math.sign(dif) * Math.pow(Math.abs(dif), 0.7) * 0.008
+
+      if (Math.abs(dif) < 0.001) {
+        this.position = i
+      }
+    }
+
+    this.measure.style.transform = `translateY(${this.position * 100}px)`
+
+    this.material.uniforms.uProgress.value = this.position
+    this.circleMaterial.uniforms.uProgress.value = this.position
+
+    let current = Math.abs(Math.floor(this.position) % this.textures.length)
+    let next = Math.abs((Math.floor(this.position) + 1) % this.textures.length)
+
+    this.material.uniforms.uTexture0.value = this.textures[current]
+    this.material.uniforms.uTexture1.value = this.textures[next]
+    this.circleMaterial.uniforms.uTexture0.value = this.textures[current]
+    this.circleMaterial.uniforms.uTexture1.value = this.textures[next]
+
+    this.indicator.innerHTML = `${current + 1}/${this.textures.length}`
+
     const timeDelta = this.clock.getDelta() * this.timeScale
-
     this.time += timeDelta
-
-    this.plane.rotation.y = this.time / 2
-
     this.material.uniforms.uTime.value = this.time
+    this.circleMaterial.uniforms.uTime.value = this.time
+
+    this.renderer.setRenderTarget(this.renderTarget)
+    this.renderer.render(this.offscreenScene, this.camera)
+    this.renderer.setRenderTarget(null)
+
+    this.postMaterial.uniforms.uTexture0.value = this.renderTarget.texture
 
     this.renderer.render(this.scene, this.camera)
 

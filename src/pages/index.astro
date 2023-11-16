@@ -1,18 +1,24 @@
 ---
-import Layout from '@/layouts/Layout.astro'
-import WebGL from '@/components/WebGL.astro'
 import Loading from '@/components/Loading.astro'
+import WebGL from '@/components/WebGL.astro'
+import Layout from '@/layouts/Layout.astro'
 ---
 
-<Layout
-  title="takaoka"
-  description="myportfolios"
-  addtionalClass="fixed"
-  imageUrl="thumbnails/thumb.jpg"
-  domain=""
->
+<Layout title="takaoka" description="myportfolios" addtionalClass="fixed" imageUrl="thumbnails/thumb.jpg" domain="">
   <Loading />
   <WebGL />
+  <div class="measure">
+    <div class="m1"></div>
+    <div class="m2"></div>
+    <div class="m3"></div>
+    <div class="dot"></div>
+  </div>
+  <div class="button-ui">
+    <button class="button prev _roboto">Prev</button>
+    <button class="button next _roboto">Next</button>
+  </div>
+  <div class="indicator _roboto">0/0</div>
+  <div class="scroll">scroll</div>
 </Layout>
 
 <style lang="scss">
@@ -21,11 +27,111 @@ import Loading from '@/components/Loading.astro'
     height: 100svh;
     overflow: hidden;
   }
+  .measure {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    height: 400px;
+    width: 10px;
+    top: 0;
+    left: 10px;
+    border-left: 10px solid #fff;
+    & > * {
+      width: 10px;
+      height: 10px;
+      background-color: red;
+      position: absolute;
+    }
+    .m1 {
+      top: 0px;
+    }
+    .m2 {
+      top: 200px;
+    }
+    .m3 {
+      top: 400px;
+    }
+    .dot {
+      background-color: green;
+      left: 15px;
+    }
+  }
+  .button-ui {
+    position: fixed;
+    z-index: 0;
+    display: grid;
+    height: 100%;
+    width: 100%;
+    align-items: center;
+    grid-template-columns: repeat(2, 1fr);
+    padding-inline: 4rem;
+  }
+  .button-ui > button {
+    padding: 1rem;
+    color: #f2f2f2;
+    font-size: 2.8rem;
+    letter-spacing: 0.1em;
+  }
+  .button-ui > button.prev {
+    justify-self: start;
+  }
+  .button-ui > button.next {
+    justify-self: end;
+  }
+  .indicator {
+    position: absolute;
+    z-index: 1;
+    bottom: 2.4rem;
+    right: 2.4rem;
+    font-size: 2.4rem;
+    color: #f2f2f2;
+  }
+  .scroll {
+    position: absolute;
+    z-index: 1;
+    bottom: 1.6rem;
+    display: grid;
+    justify-items: center;
+    color: var(--white);
+    width: 100%;
+    grid-template-columns: repeat(2, auto);
+    justify-content: center;
+    column-gap: 0.8rem;
+    align-items: center;
+    &::after {
+      content: '';
+      display: block;
+      width: 2rem;
+      height: 2rem;
+      border: 2px solid var(--white);
+      border-radius: 50%;
+      animation: scroll 1.5s infinite;
+      @keyframes scroll {
+        0% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(0.4rem);
+        }
+        100% {
+          transform: translateY(0);
+        }
+      }
+    }
+  }
+  @media (max-width: 780px) {
+    .button-ui > button {
+      font-size: 2rem;
+    }
+    .indicator {
+      font-size: 1.6rem;
+    }
+  }
 </style>
 
 <script>
-  import { init } from '@/js/webgl/webgl'
   import { Loading } from '@/js/utils/Loading'
+  import { init } from '@/js/webgl/webgl'
 
   window.addEventListener('load', () => {
     const loading = new Loading(
