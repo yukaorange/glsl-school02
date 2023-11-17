@@ -31,7 +31,7 @@ export class ScrollAnimator {
 
   setupWheelEvent() {
     document.addEventListener('wheel', (event) => {
-      this.speed += event.deltaY * 0.000016
+      this.speed += event.deltaY * 0.000026
     })
   }
 
