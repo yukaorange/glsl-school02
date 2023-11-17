@@ -406,7 +406,7 @@ export class Sketch {
         this.resetTimer()
         setTimeout(() => {
           this.clicked = false
-        }, 2000)
+        }, 1000)
       }
     })
   }
@@ -420,7 +420,7 @@ export class Sketch {
         this.resetTimer()
         setTimeout(() => {
           this.clicked = false
-        }, 2000)
+        }, 1000)
       }
     })
   }
@@ -476,7 +476,7 @@ export class Sketch {
     const decay = Math.pow(0.97, deltaTime * 60)
 
     if (this.clicked || this.timerActive) {
-      let t = 0.02
+      let t = 0.07
       t *= deltaTime * 60
       this.position = this.ease(this.position, this.targetPos, t)
     } else {

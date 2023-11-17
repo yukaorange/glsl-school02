@@ -28,14 +28,13 @@ void main() {
 
   float p = fract(uProgress);
 
-  vec4 noise = texture2D(uNoise, mirrored(newUv + uTime * 0.04));
+  vec4 noise = texture2D(uNoise, mirrored(newUv / 2.0 + sin(uTime)));
 
   float uvX = vUv.x;
   p = step(0.0, (p + uvX - 1.0));
-  p = p + noise.r * 0.01;
 
-  vec4 texture0 = texture2D(uTexture0, newUv + noise.r * 0.01);
-  vec4 texture1 = texture2D(uTexture1, newUv + noise.r * 0.01);
+  vec4 texture0 = texture2D(uTexture0, newUv + noise.r * 0.02);
+  vec4 texture1 = texture2D(uTexture1, newUv + noise.r * 0.02);
 
   vec4 finalColor0 = mix(texture0, texture1, p);
   vec4 finalColor1 = mix(texture0, texture1, p);
