@@ -431,7 +431,9 @@ export class Sketch {
     })
 
     window.addEventListener('blur', function () {
-      this.resetTimer()
+      if (this.updateTimer) {
+        clearInterval(this.updateTimer)
+      }
     })
   }
 
