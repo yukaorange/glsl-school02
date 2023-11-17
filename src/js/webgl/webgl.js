@@ -461,11 +461,11 @@ export class Sketch {
     }
 
     const deltaTime = this.clock.getDelta()
-    const decay = Math.pow(0.97, deltaTime * 60) // 1秒間に60フレームを想定
+    const decay = Math.pow(0.97, deltaTime * 60) 
 
     if (this.clicked || this.timerActive) {
-      let t = 0.02 // 基本の補間係数
-      t *= deltaTime * 60 // tの値をデルタタイムに基づいて調整
+      let t = 0.02 
+      t *= deltaTime * 60 
       this.position = this.ease(this.position, this.targetPos, t)
     } else {
       this.speed = this.scrollAnimator.getSpeed() * decay
@@ -475,7 +475,7 @@ export class Sketch {
     let i = Math.round(this.position)
     let dif = i - this.position
 
-    const positionAdjust = 0.008 // PCとモバイルの間の適切な平均値
+    const positionAdjust = 0.008 
     this.position += Math.sign(dif) * Math.pow(Math.abs(dif), 0.25) * positionAdjust * deltaTime * 60
 
     if (Math.abs(dif) < 0.001) {
