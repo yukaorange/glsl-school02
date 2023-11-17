@@ -80,6 +80,7 @@ export class Sketch {
       this.timerInit()
       this.clickEventInit()
       this.clickBackEventInit()
+      this.focusEventInit()
       this.resize()
       this.play()
       this.render()
