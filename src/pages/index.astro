@@ -26,6 +26,7 @@ import Layout from '@/layouts/Layout.astro'
     min-height: 100svh;
     height: 100svh;
     overflow: hidden;
+    background-color:var(--black);
   }
   .measure {
     display: none;
@@ -140,7 +141,7 @@ import Layout from '@/layouts/Layout.astro'
       document.querySelector('#progress'),
       document.querySelector('#counter'),
       () => {
-        init()
+      init()
       },
     )
   })

@@ -4,7 +4,7 @@
  I analyzed a reference website to create a geometry shaped into a circle, and also implemented a texture swap that fits the shape. This was done in the context of scroll interaction."
 
  inspired: https://asmobius.co.jp/
- deploy: 
+ deploy: https://glsl-school02.vercel.app/
 
 
 # starting with

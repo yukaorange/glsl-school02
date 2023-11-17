@@ -26,8 +26,8 @@ export class Sketch {
 
     this.devicePixelRatio = window.devicePixelRatio || 1
 
-    this.width = this.container.offsetWidth * this.devicePixelRatio
-    this.height = this.container.offsetHeight * this.devicePixelRatio
+    this.width = this.container.offsetWidth
+    this.height = this.container.offsetHeight
 
     this.Xaspect = this.width / this.height
     this.Yaspect = this.height / this.width
@@ -74,8 +74,8 @@ export class Sketch {
       this.addObjects()
       this.addCamera()
       // this.addControls()
-      this.setupIndicator()
       // this.addSettings()
+      this.setupIndicator()
       this.ScrollAnimatorInit()
       this.timerInit()
       this.clickEventInit()
@@ -167,8 +167,8 @@ export class Sketch {
    * Update Sketch dimensions and aspect ratios on window resize.
    */
   resize() {
-    this.width = this.container.offsetWidth * this.devicePixelRatio
-    this.height = this.container.offsetHeight * this.devicePixelRatio
+    this.width = this.container.offsetWidth
+    this.height = this.container.offsetHeight
 
     this.Xaspect = this.width / this.height
     this.Yaspect = this.height / this.width
@@ -186,14 +186,14 @@ export class Sketch {
     this.plane.scale.x = this.Xaspect
 
     if (window.innerWidth <= 400) {
-      this.circle.scale.set(0.6, 0.6)
+      this.circle.scale.set(0.6, 0.6, 0.6)
     } else if (window.innerWidth <= 780) {
-      this.circle.scale.set(0.75, 0.75)
+      this.circle.scale.set(0.75, 0.75, 0.75)
     } else {
-      this.circle.scale.set(1, 1)
+      this.circle.scale.set(1, 1, 1)
     }
 
-    this.renderer.setSize(this.width * this.devicePixelRatio, this.height * this.devicePixelRatio)
+    this.renderer.setSize(this.width, this.height)
 
     this.camera.updateProjectionMatrix()
   }
@@ -374,8 +374,8 @@ export class Sketch {
     this.timerActive = true
     this.updateTimer = setInterval(() => {
       this.targetPos = this.position + 1
-      this.targetPos = Math.round(this.targetPos)
-    }, 5000)
+      this.targetPos = Math.ceil(this.targetPos)
+    }, 7000)
     window.addEventListener('wheel', () => {
       this.timerActive = false
       this.resetTimer()
@@ -385,37 +385,6 @@ export class Sketch {
       this.resetTimer()
     })
   }
-
-  clickEventInit() {
-    const next = document.querySelector('.next')
-    next.addEventListener('click', () => {
-      if (this.clicked === false) {
-        this.clicked = true
-        this.targetPos = Math.round(this.targetPos) + 1
-        this.timerActive = false
-        this.resetTimer()
-        setTimeout(() => {
-          this.clicked = false
-        }, 1000)
-      }
-    })
-  }
-  clickBackEventInit() {
-    const prev = document.querySelector('.prev')
-    prev.addEventListener('click', () => {
-      if (this.clicked === false) {
-        this.clicked = true
-        this.targetPos = Math.round(this.targetPos) - 1
-
-        this.timerActive = false
-        this.resetTimer()
-        setTimeout(() => {
-          this.clicked = false
-        }, 1000)
-      }
-    })
-  }
-
   resetTimer() {
     if (this.updateTimer) {
       clearInterval(this.updateTimer)
@@ -424,7 +393,36 @@ export class Sketch {
     this.updateTimer = setInterval(() => {
       this.timerActive = true
       this.targetPos = this.position + 1
-    }, 5000)
+    }, 7000)
+  }
+
+  clickEventInit() {
+    const next = document.querySelector('.next')
+    next.addEventListener('click', () => {
+      if (this.clicked === false) {
+        this.clicked = true
+        this.targetPos = this.position + 1
+        this.timerActive = false
+        this.resetTimer()
+        setTimeout(() => {
+          this.clicked = false
+        }, 2000)
+      }
+    })
+  }
+  clickBackEventInit() {
+    const prev = document.querySelector('.prev')
+    prev.addEventListener('click', () => {
+      if (this.clicked === false) {
+        this.clicked = true
+        this.targetPos = this.position - 1
+        this.timerActive = false
+        this.resetTimer()
+        setTimeout(() => {
+          this.clicked = false
+        }, 2000)
+      }
+    })
   }
 
   setupIndicator() {
@@ -446,6 +444,14 @@ export class Sketch {
     return start + (end - start) * t
   }
 
+  isMobile() {
+    if (navigator.userAgent.match(/iPhone|Android.+Mobile/)) {
+      return true
+    } else {
+      return false
+    }
+  }
+
   /**
    * Render the scene.
    */
@@ -454,23 +460,33 @@ export class Sketch {
       return
     }
     if (this.clicked) {
-      let t = 0.01
+      let t = 0.02
+      if (this.isMobile()) {
+        t = 0.05
+      }
       this.position = this.ease(this.position, this.targetPos, t)
     } else if (this.timerActive) {
-      let t = 0.01
+      let t = 0.02
+      if (this.isMobile()) {
+        t = 0.05
+      }
       this.position = this.ease(this.position, this.targetPos, t)
     } else {
       this.speed = this.scrollAnimator.getSpeed()
       this.position += this.speed
+    }
 
-      let i = Math.round(this.position)
-      let dif = i - this.position
+    let i = Math.round(this.position)
+    let dif = i - this.position
 
+    if (this.isMobile()) {
+      this.position += Math.sign(dif) * Math.pow(Math.abs(dif), 0.35) * 0.004
+    } else {
       this.position += Math.sign(dif) * Math.pow(Math.abs(dif), 0.7) * 0.008
+    }
 
-      if (Math.abs(dif) < 0.001) {
-        this.position = i
-      }
+    if (Math.abs(dif) < 0.001) {
+      this.position = i
     }
 
     this.measure.style.transform = `translateY(${this.position * 100}px)`

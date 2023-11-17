@@ -6,9 +6,7 @@ export class ScrollAnimator {
   }
 
   setupEventListeners() {
-    if ('ontouchstart' in window) {
-      this.setupTouchEvents()
-    }
+    this.setupTouchEvents()
     this.setupWheelEvent()
   }
 
