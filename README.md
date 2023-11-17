@@ -1,4 +1,4 @@
-# created in astro / using raw webgl api
+# created in astro / using three js
  
  I was tryna intracvive webgl animation.
  I analyzed a reference website to create a geometry shaped into a circle, and also implemented a texture swap that fits the shape. This was done in the context of scroll interaction."
