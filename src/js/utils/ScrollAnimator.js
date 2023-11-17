@@ -1,6 +1,11 @@
+import * as THREE from 'three'
+
 export class ScrollAnimator {
   constructor() {
     this.speed = 0
+    this.clock = new THREE.Clock()
+    this.lastTime = this.clock.getElapsedTime()
+    this.currentTime = 0
     this.setupEventListeners()
     this.breaking()
   }
@@ -20,13 +25,13 @@ export class ScrollAnimator {
       const currentTouchY = e.touches[0].clientY
       const touchDeltaY = previousTouchY - currentTouchY
       previousTouchY = currentTouchY
-      this.speed += touchDeltaY * 0.00018
+      this.speed += touchDeltaY * 0.00026
     })
   }
-  
+
   setupWheelEvent() {
     document.addEventListener('wheel', (event) => {
-      this.speed += event.deltaY * 0.00003
+      this.speed += event.deltaY * 0.000016
     })
   }
 
@@ -35,10 +40,15 @@ export class ScrollAnimator {
   }
 
   breaking() {
-    this.speed *= 0.97
-    // if (Math.abs(this.speed) < 0.00001) {
-    //   this.speed = 0
-    // }
+    this.currentTime = this.clock.getElapsedTime()
+
+    this.deltaTime = this.currentTime - this.lastTime
+
+    this.lastTime = this.currentTime
+
+    const decay = Math.pow(0.9, this.deltaTime * 60)
+    this.speed *= decay
+
     requestAnimationFrame(() => {
       this.breaking()
     })

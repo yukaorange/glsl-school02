@@ -459,31 +459,24 @@ export class Sketch {
     if (!this.isPlaying) {
       return
     }
-    if (this.clicked) {
-      let t = 0.02
-      if (this.isMobile()) {
-        t = 0.05
-      }
-      this.position = this.ease(this.position, this.targetPos, t)
-    } else if (this.timerActive) {
-      let t = 0.02
-      if (this.isMobile()) {
-        t = 0.05
-      }
+
+    const deltaTime = this.clock.getDelta()
+    const decay = Math.pow(0.97, deltaTime * 60) // 1秒間に60フレームを想定
+
+    if (this.clicked || this.timerActive) {
+      let t = 0.02 // 基本の補間係数
+      t *= deltaTime * 60 // tの値をデルタタイムに基づいて調整
       this.position = this.ease(this.position, this.targetPos, t)
     } else {
-      this.speed = this.scrollAnimator.getSpeed()
+      this.speed = this.scrollAnimator.getSpeed() * decay
       this.position += this.speed
     }
 
     let i = Math.round(this.position)
     let dif = i - this.position
 
-    if (this.isMobile()) {
-      this.position += Math.sign(dif) * Math.pow(Math.abs(dif), 0.35) * 0.004
-    } else {
-      this.position += Math.sign(dif) * Math.pow(Math.abs(dif), 0.7) * 0.008
-    }
+    const positionAdjust = 0.008 // PCとモバイルの間の適切な平均値
+    this.position += Math.sign(dif) * Math.pow(Math.abs(dif), 0.25) * positionAdjust * deltaTime * 60
 
     if (Math.abs(dif) < 0.001) {
       this.position = i
