@@ -16,8 +16,8 @@ uniform float uYaspect;
 varying vec2 vUv;
 
 const float PI = 3.1415926535897932384626433832795;
-const float innerR = 1. / 5.;
-const float outerR = 2. / 5.;
+const float innerR = 1.5 / 5.;
+const float outerR = 2.5 / 5.;
 
 void main() {
   vec3 pos = position;

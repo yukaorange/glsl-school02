@@ -189,7 +189,7 @@ export class Sketch {
     if (window.innerWidth <= 400) {
       this.circle.scale.set(0.6, 0.6, 0.6)
     } else if (window.innerWidth <= 780) {
-      this.circle.scale.set(0.75, 0.75, 0.75)
+      this.circle.scale.set(0.8, 0.8, 0.8)
     } else {
       this.circle.scale.set(1, 1, 1)
     }
@@ -340,9 +340,7 @@ export class Sketch {
     this.plane.scale.x = this.Xaspect
 
     this.circle = new THREE.Mesh(this.circleGeometry, this.circleMaterial)
-    this.circle.scale.x = 2 / 3
-    this.circle.scale.y = 2 / 3
-    this.circle.position.z = 0.1
+    this.circle.position.z = 0.0001
 
     this.postPlane = new THREE.Mesh(this.postGeometry, this.postMaterial)
 
