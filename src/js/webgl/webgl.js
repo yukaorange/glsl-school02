@@ -181,6 +181,9 @@ export class Sketch {
     this.material.uniforms.uXaspect.value = this.Xaspect / this.imageXAspect
     this.material.uniforms.uYaspect.value = this.Yaspect / this.imageYAspect
 
+    this.circleMaterial.uniforms.uXaspect.value = this.Xaspect / this.imageXAspect
+    this.circleMaterial.uniforms.uYaspect.value = this.Yaspect / this.imageYAspect
+
     this.camera.aspect = this.width / this.height
     // this.camera.fov = 2 * (180 / Math.PI) * Math.atan(this.height / (2 * this.dist))
 
