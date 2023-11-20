@@ -343,7 +343,7 @@ export class Sketch {
     this.plane.scale.x = this.Xaspect
 
     this.circle = new THREE.Mesh(this.circleGeometry, this.circleMaterial)
-    this.circle.position.z = 0.0001
+    this.circle.position.z = 0.00001
 
     this.postPlane = new THREE.Mesh(this.postGeometry, this.postMaterial)
 
@@ -357,6 +357,7 @@ export class Sketch {
    */
   stop() {
     this.isPlaying = false
+    console.log(this.isPlaying)
   }
   /**
    * Resume the rendering loop.
@@ -387,6 +388,7 @@ export class Sketch {
       this.resetTimer()
     })
   }
+
   resetTimer() {
     if (this.updateTimer) {
       clearInterval(this.updateTimer)
@@ -412,6 +414,7 @@ export class Sketch {
       }
     })
   }
+
   clickBackEventInit() {
     const prev = document.querySelector('.prev')
     prev.addEventListener('click', () => {
@@ -428,14 +431,17 @@ export class Sketch {
   }
 
   focusEventInit() {
-    window.addEventListener('focus', function () {
+    window.addEventListener('focus', () => {
+      console.log('focus')
       this.resetTimer()
+      this.position = Math.round(this.position)
+      this.targetPos = this.position
+      this.play()
     })
 
-    window.addEventListener('blur', function () {
-      if (this.updateTimer) {
-        clearInterval(this.updateTimer)
-      }
+    window.addEventListener('blur', () => {
+      console.log('blur')
+      this.stop()
     })
   }
 
